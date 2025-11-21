@@ -1,9 +1,10 @@
+import asyncio
 import os
 import discord
 from discord import app_commands
-from ollama_obj import ollamas
 
-llm = ollamas()
+from Query import hybrid_query
+
 TOKEN = str()
 with open("../tokenfile.txt", "r") as tokenfile:
     TOKEN = tokenfile.read()
@@ -14,46 +15,36 @@ class MyClient(discord.Client):
         intents = discord.Intents.default()
         super().__init__(intents=intents)
         self.tree = app_commands.CommandTree(self)
+        
 
     async def setup_hook(self):
         await self.tree.sync()
 
 
 client = MyClient()
-
+Qengine = hybrid_query()
 
 def chunk_text(s, size=2000):
     return [s[i : i + size] for i in range(0, len(s), size)]
 
 
-@client.tree.command(name="set_prompt", description="change system prompt")
+@client.tree.command(name="ask_pdje_codebase", description="Ask to PDJE Codebase")
 @app_commands.describe(
-    prompt="추가할 프롬프트", reset_and_rewrite="프롬프트 리셋 후 새로 입력"
+    question="Some question About PDJE or PDJE Wrapper"
 )
-async def set_prompt(
-    interaction: discord.Interaction, prompt: str, reset_and_rewrite: bool
+async def ask_pdje_codebase(
+    interaction: discord.Interaction, question: str
 ):
-    if reset_and_rewrite:
-        llm.char_prompt = prompt
-    else:
-        llm.char_prompt = llm.char_prompt + prompt
-
-    await interaction.response.send_message("Set Prompt!")
-    for i in chunk_text(llm.char_prompt):
-        await interaction.followup.send(f"{i}")
-
-
-@client.tree.command(name="ping", description="Replies pong")
-@app_commands.describe(msg="아무거나")
-async def ping(interaction: discord.Interaction, msg: str):
-    print(f"got msg: {msg}")
-    # llm.char_prompt = msg
-    await interaction.response.send_message(f"pong! GOT MSG: {msg}")
-    res = llm.text_chat(msg)["DATA"]
-    print(res)
-    for i in chunk_text(res):
-        await interaction.followup.send(f"{i}")
-    # for i in range(count - 1):
+    await interaction.response.send_message(f"Got question about '{question}'. LLM is scouring the code base to generate an answer. Please wait a few minutes!")
+    try:
+        response = await asyncio.to_thread(Qengine.query, question)
+    except Exception as e:
+        await interaction.followup.send(
+            "Ollama runner crashed. Please retry later. If this repeats, mention an admin."
+        )
+        print(e)
+    for i in chunk_text(str(response)):
+        await interaction.followup.send(i)
 
 
 @client.event
@@ -63,5 +54,4 @@ async def on_ready():
 
 
 if __name__ == "__main__":
-    llm.init_chain()
     client.run(TOKEN)
