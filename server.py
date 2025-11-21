@@ -3,27 +3,28 @@ import asyncio
 import json
 import numpy as np
 from ollama_obj import ollamas
+
 om = ollamas()
+
+
 async def ollama_machine(socket):
     global om
     try:
         async for message in socket:
-            
-                msg = json.loads(message)
-                if msg["TYPE"] == "new_char":
-                    om.char_prompt = msg["DATA"]
-                    # print(msg["DATA"])
-                if msg["TYPE"] == "reload_rag":
-                    om.remake_VDB(msg["DATA"])
-                    print("RAG COMPLETE")
-                    await socket.send('{"TYPE" : "reload_end"}')
-                if msg["TYPE"] == "msg":
-                    await socket.send(om.text_chat(msg["DATA"]))
-                if msg["TYPE"] == "reset_history":
-                    await om.memory.aclear()
+            msg = json.loads(message)
+            if msg["TYPE"] == "new_char":
+                om.char_prompt = msg["DATA"]
+                # print(msg["DATA"])
+            if msg["TYPE"] == "reload_rag":
+                om.remake_VDB(msg["DATA"])
+                print("RAG COMPLETE")
+                await socket.send('{"TYPE" : "reload_end"}')
+            if msg["TYPE"] == "msg":
+                await socket.send(om.text_chat(msg["DATA"]))
+            if msg["TYPE"] == "reset_history":
+                await om.memory.aclear()
 
     except json.JSONDecodeError:
-        
         pass
     except ws.exceptions.ConnectionClosed:
         pass
@@ -39,9 +40,4 @@ async def main():
         await asyncio.Future()
 
 
-
-
 asyncio.run(main())
-
-
-
