@@ -18,9 +18,10 @@ from RepoUpdate import clone_or_pull
 
 
 def update_codebase():
-    clone_or_pull("https://github.com/Rliop913/PDJE-Godot-Plugin.git", "./repo")
+    clone_or_pull("https://github.com/Rliop913/PDJE-Godot-Plugin.git", "./repo/PDJE-Godot-Plugin", "master")
+    os.rmdir("./repo/PDJE-Godot-Plugin/Project-DJ-Engine")
     clone_or_pull(
-        "https://github.com/Rliop913/Project-DJ-Engine.git", "./repo/PDJE-Godot-Plugin"
+        "https://github.com/Rliop913/Project-DJ-Engine.git", "./repo/PDJE-Godot-Plugin/Project-DJ-Engine"
     )
 
 

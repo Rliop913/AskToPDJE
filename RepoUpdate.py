@@ -27,12 +27,7 @@ def clone_or_pull(
     except ValueError:
         raise RuntimeError(f"remote {remote_name} not found in {dpath}")
 
-    if verify_remote:
-        exist_urls = list(remote.url)
-        if url not in exist_urls:
-            raise RuntimeError(
-                f"remote URL mismatch.\n existing: {exist_urls}\n expected: {url}"
-            )
+    
     try:
         remote.fetch(prune=True)
         if repo.head.is_detached:
