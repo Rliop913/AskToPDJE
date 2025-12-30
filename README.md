@@ -23,7 +23,7 @@ It helps users quickly find relevant modules, functions, and design intent direc
 * Ollama installed and running
 * Models pulled:
 
-  * LLM: `qwen2.5-coder:7b` (or your choice)
+  * LLM: `gpt-oss:20b` (or your choice)
   * Embedding: `mxbai-embed-large`
 
 ---
@@ -120,3 +120,4 @@ The QA prompt enforces:
 ## License
 
 MIT (or your preferred license). Add a `LICENSE` file if needed.
+
