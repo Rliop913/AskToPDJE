@@ -13,7 +13,7 @@ from llama_index.llms.ollama import Ollama
 from llama_index.embeddings.ollama import OllamaEmbedding
 from llama_index.vector_stores.chroma import ChromaVectorStore
 import chromadb
-
+from llama_index.core.node_parser import TokenTextSplitter
 from RepoUpdate import clone_or_pull
 
 
@@ -37,8 +37,6 @@ Settings.embed_model = OllamaEmbedding(model_name="mxbai-embed-large")
 # 2) 코드/문서 로드 (필요 없는 디렉토리 제외)
 EXCLUDE = [
     ".git",
-    "docs",
-    "document_sources",
     "SWIG_test",
     "swig_csharp",
     "swig_python",
@@ -46,7 +44,6 @@ EXCLUDE = [
     "build",
     "_deps",
     ".venv",
-    "extern",
     "node_modules",
 ]
 
@@ -84,13 +81,14 @@ def Index(isUpdate: bool):
             ".txt",
             ".yml",
             ".yaml",
+            ".html",
             ".json",
         ],
         filename_as_id=True,
     ).load_data()
 
     # 3) 청킹(코드베이스는 chunk_size를 좀 크게 주는 게 보통 유리)
-    node_parser = SentenceSplitter(chunk_size=1200, chunk_overlap=150)
+    node_parser = TokenTextSplitter(chunk_size=1200, chunk_overlap=150)
 
     # 4) Chroma 벡터DB 연결
     client = chromadb.PersistentClient(path=PERSIST_DIR)

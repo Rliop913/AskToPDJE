@@ -95,7 +95,7 @@ Before sending a final answer:
 """
 )
 Settings.llm = Ollama(
-    model="qwen2.5-coder:7b", temperature=0.1, request_timeout=600.0
+    model="gpt-oss:20b", temperature=0.1, request_timeout=600.0
 )
 Settings.embed_model = OllamaEmbedding(model_name="mxbai-embed-large")
 synth = get_response_synthesizer(
@@ -122,7 +122,7 @@ def hybrid_query(vec_k: int = 8, bm25_k: int = 8, rerank_n: int = 4):
 
     fusion = QueryFusionRetriever(
         retrievers=[vec, bm25],
-        similarity_top_k=rerank_n,
+        similarity_top_k=max(vec_k + bm25_k, 24),
         num_queries=2,
         use_async=False,
     )
@@ -131,8 +131,7 @@ def hybrid_query(vec_k: int = 8, bm25_k: int = 8, rerank_n: int = 4):
     qe = RetrieverQueryEngine.from_args(
         fusion,
         llm=Settings.llm,
-        note_postprocessors=[rr],
-        similarity_top_k=rerank_n,
+        node_postprocessors=[rr],
         response_synthesizer=synth
     )
     
