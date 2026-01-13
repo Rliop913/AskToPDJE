@@ -16,7 +16,7 @@ import json
 class ollamas:
     def __init__(
         self,
-        embed_model="nomic-embed-text",
+        embed_model="qwen3-embedding:0.6b",
         #  stt_model="large-v3",
         llm_model="gemma3n:e4b",
     ):

@@ -97,7 +97,7 @@ Before sending a final answer:
 Settings.llm = Ollama(
     model="gpt-oss:20b", temperature=0.1, request_timeout=600.0
 )
-Settings.embed_model = OllamaEmbedding(model_name="mxbai-embed-large")
+Settings.embed_model = OllamaEmbedding(model_name="qwen3-embedding:0.6b")
 synth = get_response_synthesizer(
     text_qa_template=SYSTEM_QA_TMPL,
     response_mode=ResponseMode.COMPACT

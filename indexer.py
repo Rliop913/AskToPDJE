@@ -19,7 +19,10 @@ from RepoUpdate import clone_or_pull
 
 def update_codebase():
     clone_or_pull("https://github.com/Rliop913/PDJE-Godot-Plugin.git", "./repo/PDJE-Godot-Plugin", "master")
-    os.rmdir("./repo/PDJE-Godot-Plugin/Project-DJ-Engine")
+    try:
+        os.rmdir("./repo/PDJE-Godot-Plugin/Project-DJ-Engine")
+    except:
+        pass
     clone_or_pull(
         "https://github.com/Rliop913/Project-DJ-Engine.git", "./repo/PDJE-Godot-Plugin/Project-DJ-Engine"
     )
@@ -30,9 +33,29 @@ PERSIST_DIR = "./rag_db"
 STORAGE_DIR = "./storage"
 COLLECTION = "my_codebase"
 
+class BatchOllamaEmbedding(OllamaEmbedding):
+    def _get_text_embeddings(self, texts):
+        # texts: List[str]
+        # Ollama embed는 input에 리스트를 주면 배치 임베딩 가능
+        res = self._client.embed(
+            model=self.model_name,
+            input=texts,
+            options=self.ollama_additional_kwargs,
+        )
+        return res.embeddings
+
+    def _get_text_embedding(self, text):
+        # 단건도 지원
+        res = self._client.embed(
+            model=self.model_name,
+            input=text,
+            options=self.ollama_additional_kwargs,
+        )
+        return res.embeddings[0]
+
 # 1) LLM / Embedding 세팅
-Settings.llm = Ollama(model="qwen2.5-coder:7b", request_timeout=120.0)
-Settings.embed_model = OllamaEmbedding(model_name="mxbai-embed-large")
+Settings.llm = Ollama(model="gpt-oss:20b", request_timeout=120.0)
+Settings.embed_model = OllamaEmbedding(model_name="qwen3-embedding:0.6b")
 
 # 2) 코드/문서 로드 (필요 없는 디렉토리 제외)
 EXCLUDE = [
@@ -44,6 +67,7 @@ EXCLUDE = [
     "build",
     "_deps",
     ".venv",
+    "docs",
     "node_modules",
 ]
 
@@ -80,9 +104,8 @@ def Index(isUpdate: bool):
             ".rst",
             ".txt",
             ".yml",
-            ".yaml",
-            ".html",
-            ".json",
+            ".yaml"
+            
         ],
         filename_as_id=True,
     ).load_data()
