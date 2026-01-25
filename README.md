@@ -129,7 +129,7 @@ Add the MCP server to your Continue config (for example `~/.continue/config.json
 ```
 
 Then, in Continue, use the MCP tool `query_codebase` or the resource
-`codebase://search/{query}` to retrieve codebase-aware answers with sources.
+`codebase://search/{query}` to retrieve RAG-only sources for the codebase.
 
 ---
 

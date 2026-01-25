@@ -4,7 +4,7 @@ from typing import Any
 
 from mcp.server.fastmcp import FastMCP
 
-from Query import hybrid_query
+from rag_only_query import rag_only_query
 
 INDEX_DIRS = (Path("./rag_db"), Path("./storage"))
 
@@ -16,7 +16,8 @@ def _index_ready() -> bool:
 
 
 def _node_source(node: Any) -> dict[str, Any]:
-    metadata = getattr(node, "metadata", {}) or {}
+    raw_node = getattr(node, "node", node)
+    metadata = getattr(raw_node, "metadata", {}) or {}
     file_path = (
         metadata.get("file_path")
         or metadata.get("file_name")
@@ -26,7 +27,9 @@ def _node_source(node: Any) -> dict[str, Any]:
     return {
         "path": file_path,
         "score": getattr(node, "score", None),
-        "content": node.get_content() if hasattr(node, "get_content") else str(node),
+        "content": raw_node.get_content()
+        if hasattr(raw_node, "get_content")
+        else str(raw_node),
     }
 
 
@@ -38,13 +41,9 @@ def query_codebase(query: str, top_k: int = 4) -> dict[str, Any]:
             "error": "Index not found. Run `uv run indexer.py` to build the codebase index."
         }
 
-    qe = hybrid_query(rerank_n=max(top_k, 4))
-    response = qe.query(query)
-    sources = [
-        _node_source(node)
-        for node in getattr(response, "source_nodes", [])[:top_k]
-    ]
-    return {"answer": str(response), "sources": sources}
+    nodes = rag_only_query(query, rerank_n=max(top_k, 4))
+    sources = [_node_source(node) for node in nodes[:top_k]]
+    return {"sources": sources}
 
 
 @mcp.resource("codebase://search/{query}")
