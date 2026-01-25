@@ -18,5 +18,7 @@ dependencies = [
     "llama-index-postprocessor-flag-embedding-reranker>=0.4.1",
     "llama-index-retrievers-bm25>=0.6.5",
     "llama-index-vector-stores-chroma>=0.5.3",
+    "mcp>=1.1.0",
+    "watchdog>=4.0.0",
     "ruff>=0.14.5",
 ]

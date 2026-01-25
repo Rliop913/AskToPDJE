@@ -41,26 +41,27 @@ uv sync
 
 ## Indexing
 
-### Run Indexing
+### Run Indexing (full rebuild)
 
 ```bash
-
 uv run indexer.py
-
 ```
 
-
-### Fresh index (wipe & rebuild)
-
-```python
-Index(False)
-```
 
 ### Incremental refresh
 
-```python
-Index(True)
+```bash
+uv run indexer.py --update
 ```
+
+### Real-time indexing (watch mode)
+
+```bash
+uv run indexer.py --watch --skip-repo-update
+```
+
+> `--skip-repo-update` tells the indexer to avoid git clone/pull and watch the local repo path instead.
+> Use `--repo-root` if you want to watch a different directory.
 
 
 ## Discord Bot Usage
@@ -92,6 +93,43 @@ The bot:
 1. Acknowledges the question
 2. Runs RAG query over PDJE/PDJE_Wrapper
 3. Sends a concise answer with evidence
+
+---
+
+## Continue Custom Codebase RAG (MCP Server)
+
+You can run AskToPDJE as a Continue-compatible **custom codebase RAG MCP server**.
+
+### 1) Build the index
+
+```bash
+uv run indexer.py
+```
+
+### 2) Run the MCP server
+
+```bash
+uv run mcp_server.py
+```
+
+### 3) Configure Continue
+
+Add the MCP server to your Continue config (for example `~/.continue/config.json`):
+
+```json
+{
+  "mcpServers": [
+    {
+      "name": "AskToPDJE Codebase RAG",
+      "command": "uv",
+      "args": ["run", "mcp_server.py"]
+    }
+  ]
+}
+```
+
+Then, in Continue, use the MCP tool `query_codebase` or the resource
+`codebase://search/{query}` to retrieve codebase-aware answers with sources.
 
 ---
 
