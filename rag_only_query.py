@@ -6,16 +6,13 @@ from llama_index.postprocessor.flag_embedding_reranker import FlagEmbeddingReran
 from llama_index.retrievers.bm25 import BM25Retriever
 from llama_index.vector_stores.chroma import ChromaVectorStore
 import chromadb
-
+from llama_index.core.schema import QueryBundle
 PERSIST_DIR = "./rag_db"
 STORAGE_DIR = "./storage"
 COLLECTION = "my_codebase"
 
-Settings.llm = Ollama(
-    model="gpt-oss:20b", temperature=0.1, request_timeout=600.0
-)
 Settings.embed_model = OllamaEmbedding(model_name="qwen3-embedding:0.6b")
-
+Settings.llm = None
 
 def load_index():
     client = chromadb.PersistentClient(path=PERSIST_DIR)
@@ -42,7 +39,7 @@ def rag_only_query(query: str, vec_k: int = 8, bm25_k: int = 8, rerank_n: int = 
     rr = FlagEmbeddingReranker(top_n=rerank_n, model="BAAI/bge-reranker-v2-m3")
 
     nodes = fusion.retrieve(query)
-    reranked = rr.postprocess_nodes(nodes, query=query)
+    reranked = rr.postprocess_nodes(nodes, query_bundle=QueryBundle(query_str=query))
     return reranked
 
 

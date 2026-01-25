@@ -15,23 +15,36 @@ def _index_ready() -> bool:
     return all(path.exists() for path in INDEX_DIRS)
 
 
-def _node_source(node: Any) -> dict[str, Any]:
-    raw_node = getattr(node, "node", node)
-    metadata = getattr(raw_node, "metadata", {}) or {}
-    file_path = (
-        metadata.get("file_path")
-        or metadata.get("file_name")
-        or metadata.get("filename")
-        or metadata.get("path")
-    )
-    return {
-        "path": file_path,
-        "score": getattr(node, "score", None),
-        "content": raw_node.get_content()
-        if hasattr(raw_node, "get_content")
-        else str(raw_node),
-    }
+def _node_source(node) -> dict[str, Any]:
+    # node: NodeWithScore 같은 타입이라고 가정
+    n = node.node if hasattr(node, "node") else node
+    md = getattr(n, "metadata", {}) or {}
 
+    path = md.get("file_path") or md.get("path") or "unknown"
+    start = md.get("start_line") or md.get("line_start") or md.get("start") or "?"
+    end = md.get("end_line") or md.get("line_end") or md.get("end") or "?"
+
+    text = ""
+    if hasattr(n, "get_content"):
+        text = n.get_content() or ""
+    text = text.strip()
+    text = text[:600]  # ✅ 너무 길면 Continue에서 잘림/깨짐 유발
+
+    score = getattr(node, "score", None)
+    return {"path": path, "start": start, "end": end, "score": score, "snippet": text}
+
+def _format_sources_md(query: str, sources: list[dict[str, Any]]) -> str:
+    lines = [f"### Codebase search: `{query}`", ""]
+    if not sources:
+        return "\n".join(lines + ["(no results)"])
+
+    for i, s in enumerate(sources, 1):
+        lines.append(f"**{i}) {s['path']}:{s['start']}-{s['end']}**  (score={s['score']})")
+        lines.append("```")
+        lines.append(s["snippet"])
+        lines.append("```")
+        lines.append("")
+    return "\n".join(lines)
 
 @mcp.tool()
 def query_codebase(query: str, top_k: int = 4) -> dict[str, Any]:
@@ -43,7 +56,7 @@ def query_codebase(query: str, top_k: int = 4) -> dict[str, Any]:
 
     nodes = rag_only_query(query, rerank_n=max(top_k, 4))
     sources = [_node_source(node) for node in nodes[:top_k]]
-    return {"sources": sources}
+    return _format_sources_md(query, sources)
 
 
 @mcp.resource("codebase://search/{query}")
